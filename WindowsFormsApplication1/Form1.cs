@@ -222,7 +222,7 @@ namespace WindowsFormsApplication1
             dlg.CheckPathExists = true;
             dlg.Filter = "二进制文件|*.bin";
 
-            if(dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 if (File.Exists(dlg.FileName))
                 {
@@ -291,6 +291,27 @@ namespace WindowsFormsApplication1
             if (Res <= 0)
                 throw new Exception("CAN initial fail");
         }
+
+        unsafe private void CanInitForUpdate()
+        {
+            int Res;
+
+            VCI_INIT_CONFIG config = new VCI_INIT_CONFIG();
+
+            config.AccCode = 0x00000000;
+            config.AccMask = 0xFFFFFFFF;
+            config.Timing0 = 0x01;
+            config.Timing1 = 0x1C;
+            config.Filter = 0;
+            config.Mode = 0;
+
+            //VCI_ResetCAN(4, 0, 0);
+            VCI_InitCAN(4, 0, 0, ref config);
+            Res = (int)VCI_StartCAN(4, 0, 0);
+            if (Res <= 0)
+                throw new Exception("CAN initial fail");
+        }
+
         unsafe private bool CanSendData(UInt32 CanID, byte[] data)
         {
             VCI_CAN_OBJ obj = new VCI_CAN_OBJ();
@@ -301,13 +322,13 @@ namespace WindowsFormsApplication1
             obj.TimeFlag = 0;
             obj.RemoteFlag = 0;
             obj.SendType = 0;
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 obj.Data[i] = data[i];
             }
             obj.DataLen = 8;
             Res = (int)VCI_Transmit(4, 0, 0, ref obj, 1);
-            if(Res < 1)
+            if (Res < 1)
             {
                 return false;
             }
@@ -359,7 +380,7 @@ namespace WindowsFormsApplication1
             IntPtr pobj;
 
             BlockSize = Len / 8;
-            if(Len % 8 > 0)
+            if (Len % 8 > 0)
             {
                 BlockSize += 1;
             }
@@ -374,9 +395,9 @@ namespace WindowsFormsApplication1
                 obj.RemoteFlag = 0;
                 obj.SendType = 0;
                 obj.DataLen = 0;
-                for(int i = 0; i < 8; i++)
+                for (int i = 0; i < 8; i++)
                 {
-                    if(i + Offset < Len)
+                    if (i + Offset < Len)
                     {
                         obj.Data[i] = data[Offset + i];
                         obj.DataLen++;
@@ -388,7 +409,7 @@ namespace WindowsFormsApplication1
                 }
 
                 tmpBuf = StructToBytes(obj, objSize);
-                for(int i = 0; i < objSize; i++)
+                for (int i = 0; i < objSize; i++)
                 {
                     Marshal.WriteByte(pobj, BlockCount * objSize + i, tmpBuf[i]);
                 }
@@ -398,12 +419,6 @@ namespace WindowsFormsApplication1
             }
 
             Res = (int)VCI_Transmit(4, 0, 0, pobj, (uint)BlockSize);
-            //for (int i = 0; i < BlockSize; i++)
-            //{
-                //Res = (int)VCI_Transmit(4, 0, 0, pobj, 1);
-                //pobj += objSize;
-                //Thread.Sleep(500);
-            //}
             Marshal.FreeHGlobal(pobj);
             return Res < BlockSize ? false : true;
             //return true;
@@ -412,12 +427,12 @@ namespace WindowsFormsApplication1
         {
             int Idx = 0;
             byte[] tmpBuf = new byte[8];
-            while(Idx < 32)
+            while (Idx < 32)
             {
                 MemoryCopy(ref tmpBuf, 0, ref Pkt, Idx, 8);
                 if (!CanSendData(CanID, tmpBuf))
                 {
-                    if(TimeOut == 0)
+                    if (TimeOut == 0)
                     {
                         return false;
                     }
@@ -436,11 +451,11 @@ namespace WindowsFormsApplication1
             int Res;
 
             Res = (int)VCI_Receive(4, 0, 0, ref obj, 1, 10);
-            if(Res <= 0)
+            if (Res <= 0)
             {
                 return false;
             }
-            for(int i = 0; i < 8; i++)
+            for (int i = 0; i < 8; i++)
             {
                 if (i < obj.DataLen)
                     Dat[i] = obj.Data[i];
@@ -457,25 +472,12 @@ namespace WindowsFormsApplication1
         private void MemoryCopy(ref byte[] dstBuf, int dstIdx, ref byte[] srcBuf, int srcIdx, int cpSize)
         {
             int i;
-            for(i = 0; i < cpSize; i++)
+            for (i = 0; i < cpSize; i++)
             {
                 dstBuf[i + dstIdx] = srcBuf[i + srcIdx];
             }
         }
-        unsafe private void MemoryCopy(byte *dstBuf, byte[] srcBuf, int srcIdx, int cpSize)
-        {
-            for(int i = 0; i < cpSize; i++)
-            {
-                dstBuf[i] = srcBuf[i + srcIdx];
-            }
-        }
-        private void MemorySet(ref byte[] Buf, byte ch, int Len)
-        {
-            for(int i = 0; i < Len; i++)
-            {
-                Buf[i] = ch;
-            }
-        }
+
         private void Send_UpdateMark(UInt32 CanID)
         {
             byte[] Pkt = new byte[8];
@@ -488,7 +490,7 @@ namespace WindowsFormsApplication1
             Pkt[5] = 0xAA;
             Pkt[6] = 0x00;
             Pkt[7] = 0xAA;
-            if(!CanSendData(CanID, Pkt))
+            if (!CanSendData(CanID, Pkt))
             {
                 throw new Exception("Error : 10001");
             }
@@ -500,9 +502,9 @@ namespace WindowsFormsApplication1
 
             do
             {
-                if(!CanRecvData(ref CanID, ref tmpBuf))
+                if (!CanRecvData(ref CanID, ref tmpBuf))
                 {
-                    if(TimeOut == 0)
+                    if (TimeOut == 0)
                     {
                         throw new Exception("Error : 10002");
                     }
@@ -565,7 +567,7 @@ namespace WindowsFormsApplication1
             UInt16 BlockSize;
 
             DisableControl();
-            TmpBuf = new byte[targetBufSize*8];
+            TmpBuf = new byte[targetBufSize * 8];
             try
             {
                 CanInit();
@@ -579,6 +581,7 @@ namespace WindowsFormsApplication1
                 }
 
                 Send_UpdateMark(CanID);
+                CanInitForUpdate();
                 WaitSYN(100);
                 Thread.Sleep(8000);
                 CanDataClear();
@@ -589,9 +592,9 @@ namespace WindowsFormsApplication1
                 {
                     throw new Exception("Error : 10001");
                 }
-                ProcessBarSet(Offset); 
+                ProcessBarSet(Offset);
 
-                while(Offset < Len)
+                while (Offset < Len)
                 {
                     BlockSize = BinGetWord(BinBuffer, Offset);
                     //Offset += 8;
@@ -613,7 +616,7 @@ namespace WindowsFormsApplication1
                             MemoryCopy(ref TmpBuf, 0, ref BinBuffer, Offset, SendLen);
                             Offset += SendLen;
                             BlockSize -= targetBufSize;
-                        } 
+                        }
                         else
                         {
                             SendLen = BlockSize * 8;
@@ -631,16 +634,16 @@ namespace WindowsFormsApplication1
                 }
                 Res = true;
             }
-            catch(Exception Err)
+            catch (Exception Err)
             {
                 ShowMessage(Err.Message);
             }
 
-            if(initFlag)
+            if (initFlag)
             {
                 CanClose();
             }
-            if(Res)
+            if (Res)
             {
                 ShowMessage("OK");
             }
