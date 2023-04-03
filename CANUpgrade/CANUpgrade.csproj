@@ -7,7 +7,7 @@
     <ProjectGuid>{4447BB77-BDD2-4596-9245-71F0700769AB}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WindowsFormsApplication1</RootNamespace>
+    <RootNamespace>CANUpgrade</RootNamespace>
     <AssemblyName>CANUpgradeService</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
