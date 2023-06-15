@@ -604,7 +604,7 @@ namespace WindowsFormsApplication1
                 WaitSYN(1, 100);
                 CanInitForUpdate();
                 WaitSYN(2, 5000);
-                Thread.Sleep(10);
+                Thread.Sleep(100);
                 CanDataClear();
 
                 Offset = (1 + 8 + 2) * 8;
