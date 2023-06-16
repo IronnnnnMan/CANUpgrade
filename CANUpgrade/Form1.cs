@@ -9,6 +9,8 @@ using System.Windows.Forms;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace WindowsFormsApplication1
 {
@@ -209,44 +211,33 @@ namespace WindowsFormsApplication1
         static extern UInt32 VCI_FindUsbDevice(ref VCI_BOARD_INFO1 pInfo);
         /*------------函数描述结束---------------------------------*/
 
+        /*-----------全局变量声明-------------*/
+        UInt16 LastestVerCheckedFlag = 1;
+        UInt16 ChangeToOldVersion = 0;
+
         public Form1()
         {
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void UpgradeProcessBarInit(int Len)
         {
-            OpenFileDialog dlg = new OpenFileDialog();
-
-            dlg.CheckPathExists = true;
-            dlg.Filter = "二进制文件|*.bin";
-
-            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                if (File.Exists(dlg.FileName))
-                {
-                    textBox1.Text = dlg.FileName;
-                }
-            }
+            UpgradeProgressBar.Value = 0;
+            UpgradeProgressBar.Minimum = 0;
+            UpgradeProgressBar.Maximum = Len;
         }
-        private void ProcessBarInit(int Len)
+        private void UpgradeProcessBarSet(int Val)
         {
-            progressBar1.Value = 0;
-            progressBar1.Minimum = 0;
-            progressBar1.Maximum = Len;
-        }
-        private void ProcessBarSet(int Val)
-        {
-            progressBar1.Value = Val;
+            UpgradeProgressBar.Value = Val;
         }
         private void EnableControl()
         {
-            button2.Enabled = true;
+            UpgradeButton.Enabled = true;
         }
         private void DisableControl()
         {
-            button2.Enabled = false;
+            UpgradeButton.Enabled = false;
         }
         private void ShowMessage(string s)
         {
@@ -495,7 +486,7 @@ namespace WindowsFormsApplication1
                 throw new Exception("Error : 10001");
             }
         }
-        private void WaitSYN(int TimeOut)
+        private void WaitSYN(int HandshakingType, int TimeOut)
         {
             byte[] tmpBuf = new byte[8];
             UInt32 CanID = 0;
@@ -506,19 +497,39 @@ namespace WindowsFormsApplication1
                 {
                     if (TimeOut == 0)
                     {
-                        throw new Exception("Error : 10002");
+                        if (HandshakingType == 1)
+                        {
+                            throw new Exception("Error : 10002");
+                        }
+                        else if (HandshakingType == 2)
+                        {
+                            throw new Exception("WARNNING : 请尝试用旧版本的上位机和软件进行升级。注意：旧版本的工程无法提示是否烧录成功，需要在烧录后通过测试得知！");
+                        }
                     }
                     TimeOut--;
                     Thread.Sleep(10);
                 }
                 else
                 {
-                    if (tmpBuf[0] == 0xAA && tmpBuf[1] == 0x00
-                        && tmpBuf[2] == 0xAA && tmpBuf[3] == 0x00
-                        && tmpBuf[4] == 0xAA && tmpBuf[5] == 0x00
-                        && tmpBuf[6] == 0xAA && tmpBuf[7] == 0x00)
+                    if (HandshakingType == 1) // 第一次握手
                     {
-                        break;
+                        if (tmpBuf[0] == 0xAA && tmpBuf[1] == 0x00
+                            && tmpBuf[2] == 0xAA && tmpBuf[3] == 0x00
+                            && tmpBuf[4] == 0xAA && tmpBuf[5] == 0x00
+                            && tmpBuf[6] == 0xAA && tmpBuf[7] == 0x00)
+                        {
+                            break;
+                        }
+                    }
+                    else if (HandshakingType == 2) // 擦除完FLASH扇区后握手
+                    {
+                        if (tmpBuf[0] == 0xBB && tmpBuf[1] == 0x00
+                            && tmpBuf[2] == 0xBB && tmpBuf[3] == 0x00
+                            && tmpBuf[4] == 0xBB && tmpBuf[5] == 0x00
+                            && tmpBuf[6] == 0xBB && tmpBuf[7] == 0x00)
+                        {
+                            break;
+                        }
                     }
                 }
             } while (true);
@@ -572,7 +583,7 @@ namespace WindowsFormsApplication1
             {
                 CanInit();
                 Len = ReadFile(BinPath, out BinBuffer);
-                ProcessBarInit(Len);
+                UpgradeProcessBarInit(Len);
                 initFlag = true;
 
                 if (!CheckBinaryFile(BinBuffer))
@@ -582,8 +593,18 @@ namespace WindowsFormsApplication1
 
                 Send_UpdateMark(CanID);
                 CanInitForUpdate();
-                WaitSYN(100);
-                Thread.Sleep(8000);
+                WaitSYN(1, 200);
+                if (LastestVerCheckedFlag == 1)
+                {
+                    WaitSYN(2, 3000);
+                    Thread.Sleep(100);
+                }
+                else if (LastestVerCheckedFlag == 0)
+                {
+                    // 取消校验和检测
+                    // .............
+                    Thread.Sleep(16000);
+                }
                 CanDataClear();
 
                 Offset = (1 + 8 + 2) * 8;
@@ -592,7 +613,7 @@ namespace WindowsFormsApplication1
                 {
                     throw new Exception("Error : 10001");
                 }
-                ProcessBarSet(Offset);
+                UpgradeProcessBarSet(Offset);
 
                 while (Offset < Len)
                 {
@@ -628,7 +649,7 @@ namespace WindowsFormsApplication1
                         {
                             throw new Exception("Error : 10001");
                         }
-                        ProcessBarSet(Offset);
+                        UpgradeProcessBarSet(Offset);
                         Thread.Sleep(30);
                     }
                 }
@@ -649,31 +670,31 @@ namespace WindowsFormsApplication1
             }
             EnableControl();
         }
-        private void button2_Click(object sender, EventArgs e)
-        {
-            Thread t = new Thread(new ParameterizedThreadStart(UpdateProcess));
-            t.Start(textBox1.Text);
-            Thread.Sleep(10);
-        }
 
         private void Form1_Load(object sender, EventArgs e)
         {
 
         }
 
-        private void label1_Click(object sender, EventArgs e)
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
         {
 
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
+        private void label1_Click_1(object sender, EventArgs e)
         {
 
         }
 
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        private void label9_Click(object sender, EventArgs e)
         {
-            switch (comboBox1.SelectedIndex)
+
+        }
+
+        private void BaudrateComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (BaudrateComboBox.SelectedIndex)
             {
                 case 0: Timing0 = 0x00; Timing1 = 0x14; break;
                 case 1: Timing0 = 0x00; Timing1 = 0x16; break;
@@ -685,6 +706,65 @@ namespace WindowsFormsApplication1
                 case 7: Timing0 = 0x18; Timing1 = 0x1c; break;
                 case 8: Timing0 = 0x31; Timing1 = 0x1c; break;
                 case 9: Timing0 = 0xbf; Timing1 = 0xff; break;
+            }
+        }
+
+        private void CANIDConfigButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ConfigProgressBar_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UpgradeButton_Click(object sender, EventArgs e)
+        {
+            Thread t = new Thread(new ParameterizedThreadStart(UpdateProcess));
+            t.Start(UgFileTextBox.Text);
+            Thread.Sleep(10);
+        }
+
+        private void UgFileTextBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void UpgradeProgressBar_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void BrowseButton_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+
+            dlg.CheckPathExists = true;
+            dlg.Filter = "二进制文件|*.bin";
+
+            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                if (File.Exists(dlg.FileName))
+                {
+                    UgFileTextBox.Text = dlg.FileName;
+                }
+            }
+        }
+
+        private void OldVersionButton_CheckedChanged(object sender, EventArgs e)
+        {
+            if (OldVersionButton.Checked)
+            {
+                LastestVerCheckedFlag = 0;
+            }
+        }
+
+        private void LastestVersionButton_CheckedChanged(object sender, EventArgs e)
+        {
+            if (LastestVersionButton.Checked)
+            {
+                LastestVerCheckedFlag = 1;
             }
         }
     }
