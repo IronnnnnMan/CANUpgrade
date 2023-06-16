@@ -50,11 +50,11 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.SoftwareConfigPanel = new System.Windows.Forms.Panel();
+            this.OldVersionButton = new System.Windows.Forms.RadioButton();
+            this.LastestVersionButton = new System.Windows.Forms.RadioButton();
             this.BaudrateComboBox = new System.Windows.Forms.ComboBox();
             this.label11 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
-            this.LastestVersionButton = new System.Windows.Forms.RadioButton();
-            this.OldVersionButton = new System.Windows.Forms.RadioButton();
             this.UpgradeServicePanel.SuspendLayout();
             this.IDConfigPanel.SuspendLayout();
             this.SoftwareConfigPanel.SuspendLayout();
@@ -222,6 +222,7 @@
             this.Specific2FanText.Name = "Specific2FanText";
             this.Specific2FanText.Size = new System.Drawing.Size(132, 28);
             this.Specific2FanText.TabIndex = 16;
+            this.Specific2FanText.TextChanged += new System.EventHandler(this.Specific2FanText_TextChanged);
             // 
             // label5
             // 
@@ -272,6 +273,31 @@
             this.SoftwareConfigPanel.Size = new System.Drawing.Size(879, 120);
             this.SoftwareConfigPanel.TabIndex = 15;
             // 
+            // OldVersionButton
+            // 
+            this.OldVersionButton.AutoSize = true;
+            this.OldVersionButton.Location = new System.Drawing.Point(648, 56);
+            this.OldVersionButton.Name = "OldVersionButton";
+            this.OldVersionButton.Size = new System.Drawing.Size(126, 25);
+            this.OldVersionButton.TabIndex = 29;
+            this.OldVersionButton.TabStop = true;
+            this.OldVersionButton.Text = "Old version";
+            this.OldVersionButton.UseVisualStyleBackColor = true;
+            this.OldVersionButton.CheckedChanged += new System.EventHandler(this.OldVersionButton_CheckedChanged);
+            // 
+            // LastestVersionButton
+            // 
+            this.LastestVersionButton.AutoSize = true;
+            this.LastestVersionButton.Checked = true;
+            this.LastestVersionButton.Location = new System.Drawing.Point(458, 56);
+            this.LastestVersionButton.Name = "LastestVersionButton";
+            this.LastestVersionButton.Size = new System.Drawing.Size(156, 25);
+            this.LastestVersionButton.TabIndex = 28;
+            this.LastestVersionButton.TabStop = true;
+            this.LastestVersionButton.Text = "Lastest version";
+            this.LastestVersionButton.UseVisualStyleBackColor = true;
+            this.LastestVersionButton.CheckedChanged += new System.EventHandler(this.LastestVersionButton_CheckedChanged);
+            // 
             // BaudrateComboBox
             // 
             this.BaudrateComboBox.FormattingEnabled = true;
@@ -312,31 +338,6 @@
             this.label9.TabIndex = 25;
             this.label9.Text = "Software config";
             this.label9.Click += new System.EventHandler(this.label9_Click);
-            // 
-            // LastestVersionButton
-            // 
-            this.LastestVersionButton.AutoSize = true;
-            this.LastestVersionButton.Checked = true;
-            this.LastestVersionButton.Location = new System.Drawing.Point(458, 56);
-            this.LastestVersionButton.Name = "LastestVersionButton";
-            this.LastestVersionButton.Size = new System.Drawing.Size(156, 25);
-            this.LastestVersionButton.TabIndex = 28;
-            this.LastestVersionButton.TabStop = true;
-            this.LastestVersionButton.Text = "Lastest version";
-            this.LastestVersionButton.UseVisualStyleBackColor = true;
-            this.LastestVersionButton.CheckedChanged += new System.EventHandler(this.LastestVersionButton_CheckedChanged);
-            // 
-            // OldVersionButton
-            // 
-            this.OldVersionButton.AutoSize = true;
-            this.OldVersionButton.Location = new System.Drawing.Point(648, 56);
-            this.OldVersionButton.Name = "OldVersionButton";
-            this.OldVersionButton.Size = new System.Drawing.Size(126, 25);
-            this.OldVersionButton.TabIndex = 29;
-            this.OldVersionButton.TabStop = true;
-            this.OldVersionButton.Text = "Old version";
-            this.OldVersionButton.UseVisualStyleBackColor = true;
-            this.OldVersionButton.CheckedChanged += new System.EventHandler(this.OldVersionButton_CheckedChanged);
             // 
             // Form1
             // 

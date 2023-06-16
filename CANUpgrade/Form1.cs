@@ -11,6 +11,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Xml.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Rebar;
+
 
 namespace WindowsFormsApplication1
 {
@@ -711,6 +714,87 @@ namespace WindowsFormsApplication1
 
         private void CANIDConfigButton_Click(object sender, EventArgs e)
         {
+            // 只有新版本有此功能
+            if(LastestVerCheckedFlag == 1)                 
+            {
+                UInt32 CanID = gCanID;
+                byte[] CANIDBuff = new byte[8];
+                // 获取几个CANID textBox的内容
+                System.Windows.Forms.TextBox[] textBoxes = new System.Windows.Forms.TextBox[] { Specific2FanText, Global2FanText, FromFanText };
+                uint[] numbers = new uint[3];
+                bool isValidInput = true; // 标记是否输入有效
+
+                for (int i = 0; i < textBoxes.Length; i++)
+                {
+                    string inputText = textBoxes[i].Text;
+
+                    // 检查输入是否为有效的十六进制数
+                    if (uint.TryParse(inputText, System.Globalization.NumberStyles.HexNumber, null, out uint number))
+                    {
+                        // 限制输入范围
+                        uint minValue = 0x00000000; // 最小值
+                        uint maxValue = 0x1FFFFFFF; // 最大值
+
+                        if (number >= minValue && number <= maxValue)
+                        {
+                            numbers[i] = number;
+                        }
+                        else
+                        {
+                            // 超出范围，标记输入无效
+                            isValidInput = false;
+                            // 清空文本框内容或执行其他操作
+                            textBoxes[i].Text = string.Empty;
+                        }
+                    }
+                    else
+                    {
+                        // 输入不是有效的十六进制数，标记输入无效
+                        isValidInput = false;
+                        // 清空文本框内容或执行其他操作
+                        textBoxes[i].Text = string.Empty;
+                    }
+                }
+
+                if (!isValidInput)
+                {
+                    // 提示用户输入合法范围的数字
+                    MessageBox.Show($"请输入有效的十六进制数字，并确保在范围 0x00000000 到 0x1FFFFFFF 内。");
+                }
+                else
+                {
+                    // 数字合法
+                    int numbersIndex = 0;
+
+                    for (int i = 0; i < 4; i++)
+                    {
+                        CANIDBuff[i] = (byte)((numbers[numbersIndex] >> (8 * (i % 4))) & 0xFF);
+                    }
+                    
+                    for (int i = 4; i < 8; i++)
+                    {
+                        CANIDBuff[i] = 0x00;
+                    }
+
+                    if (!CanSendData(CanID, CANIDBuff))
+                    {
+                        throw new Exception("Error : 10001");
+                    }
+
+                    numbersIndex++;
+                    if (numbersIndex >= numbers.Length)
+                    {
+                        numbersIndex = 0;
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("只有Lastest version支持此功能");
+            }
+
+
+
 
         }
 
@@ -758,6 +842,11 @@ namespace WindowsFormsApplication1
             {
                 LastestVerCheckedFlag = 0;
             }
+        }
+
+        private void Specific2FanText_TextChanged(object sender, EventArgs e)
+        {
+
         }
 
         private void LastestVersionButton_CheckedChanged(object sender, EventArgs e)
