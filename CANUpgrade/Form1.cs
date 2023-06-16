@@ -601,8 +601,8 @@ namespace WindowsFormsApplication1
                 }
 
                 Send_UpdateMark(CanID);
-                WaitSYN(1, 100);
                 CanInitForUpdate();
+                WaitSYN(1, 200);
                 WaitSYN(2, 5000);
                 Thread.Sleep(100);
                 CanDataClear();
