@@ -714,8 +714,9 @@ namespace WindowsFormsApplication1
 
         private void CANIDConfigButton_Click(object sender, EventArgs e)
         {
+            CanInit();
             // 只有新版本有此功能
-            if(LastestVerCheckedFlag == 1)                 
+            if (LastestVerCheckedFlag == 1)                 
             {
                 UInt32 CanID = gCanID;
                 byte[] CANIDBuff = new byte[8];
@@ -763,28 +764,23 @@ namespace WindowsFormsApplication1
                 }
                 else
                 {
-                    // 数字合法
-                    int numbersIndex = 0;
+                    // 数字合法                  
+                    for (int numbersIndex = 0; numbersIndex < numbers.Length; numbersIndex++)
+                    {
+                        for (int i = 0; i < 4; i++)
+                        {
+                            CANIDBuff[i] = (byte)((numbers[numbersIndex] >> (8 * (i % 4))) & 0xFF);
+                        }
 
-                    for (int i = 0; i < 4; i++)
-                    {
-                        CANIDBuff[i] = (byte)((numbers[numbersIndex] >> (8 * (i % 4))) & 0xFF);
-                    }
-                    
-                    for (int i = 4; i < 8; i++)
-                    {
-                        CANIDBuff[i] = 0x00;
-                    }
+                        for (int i = 4; i < 8; i++)
+                        {
+                            CANIDBuff[i] = 0x00;
+                        }
 
-                    if (!CanSendData(CanID, CANIDBuff))
-                    {
-                        throw new Exception("Error : 10001");
-                    }
-
-                    numbersIndex++;
-                    if (numbersIndex >= numbers.Length)
-                    {
-                        numbersIndex = 0;
+                        if (!CanSendData(CanID, CANIDBuff))
+                        {
+                            throw new Exception("Error : 10001");
+                        }
                     }
                 }
             }
