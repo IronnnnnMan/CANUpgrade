@@ -224,24 +224,28 @@ namespace WindowsFormsApplication1
             InitializeComponent();
         }
 
-        private void UpgradeProcessBarInit(int Len)
+        private void InitializeProgressBar(System.Windows.Forms.ProgressBar progressBar, int minimum, int maximum)
         {
-            UpgradeProgressBar.Value = 0;
-            UpgradeProgressBar.Minimum = 0;
-            UpgradeProgressBar.Maximum = Len;
+            progressBar.Value = minimum;
+            progressBar.Minimum = minimum;
+            progressBar.Maximum = maximum;
         }
-        private void UpgradeProcessBarSet(int Val)
+
+        private void SetProgressBarValue(System.Windows.Forms.ProgressBar progressBar, int value)
         {
-            UpgradeProgressBar.Value = Val;
+            progressBar.Value = value;
         }
-        private void EnableControl()
+
+        private void EnableControl(Control control)
         {
-            UpgradeButton.Enabled = true;
+            control.Enabled = true;
         }
-        private void DisableControl()
+
+        private void DisableControl(Control control)
         {
-            UpgradeButton.Enabled = false;
+            control.Enabled = false;
         }
+
         private void ShowMessage(string s)
         {
             MessageBox.Show(s);
@@ -534,6 +538,16 @@ namespace WindowsFormsApplication1
                             break;
                         }
                     }
+                    else if (HandshakingType == 3) // 烧写CANID配置之后握手
+                    {
+                        if (tmpBuf[0] == 0xCC && tmpBuf[1] == 0x00
+                            && tmpBuf[2] == 0xCC && tmpBuf[3] == 0x00
+                            && tmpBuf[4] == 0xCC && tmpBuf[5] == 0x00
+                            && tmpBuf[6] == 0xCC && tmpBuf[7] == 0x00)
+                        {
+                            break;
+                        }
+                    }
                 }
             } while (true);
         }
@@ -580,13 +594,14 @@ namespace WindowsFormsApplication1
             int SendLen;
             UInt16 BlockSize;
 
-            DisableControl();
+            DisableControl(UpgradeButton);
+
             TmpBuf = new byte[targetBufSize * 8];
             try
             {
                 CanInit();
-                Len = ReadFile(BinPath, out BinBuffer);
-                UpgradeProcessBarInit(Len);
+                Len = ReadFile(BinPath, out BinBuffer);                
+                InitializeProgressBar(UpgradeProgressBar, 0, Len);
                 initFlag = true;
 
                 if (!CheckBinaryFile(BinBuffer))
@@ -616,7 +631,8 @@ namespace WindowsFormsApplication1
                 {
                     throw new Exception("Error : 10001");
                 }
-                UpgradeProcessBarSet(Offset);
+
+                SetProgressBarValue(UpgradeProgressBar, Offset);
 
                 while (Offset < Len)
                 {
@@ -652,7 +668,7 @@ namespace WindowsFormsApplication1
                         {
                             throw new Exception("Error : 10001");
                         }
-                        UpgradeProcessBarSet(Offset);
+                        SetProgressBarValue(UpgradeProgressBar, Offset);
                         Thread.Sleep(30);
                     }
                 }
@@ -671,7 +687,7 @@ namespace WindowsFormsApplication1
             {
                 ShowMessage("OK");
             }
-            EnableControl();
+            EnableControl(UpgradeButton);
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -714,9 +730,17 @@ namespace WindowsFormsApplication1
 
         private void CANIDConfigButton_Click(object sender, EventArgs e)
         {
+            bool Res = false;
+            bool initFlag = false;
+
+            DisableControl(CANIDConfigButton);
+
+            // 初始化CAN分析仪
             CanInit();
+            initFlag = true;
+
             // 只有新版本有此功能
-            if (LastestVerCheckedFlag == 1)                 
+            if (LastestVerCheckedFlag == 1)
             {
                 UInt32 CanID = gCanID;
                 byte[] CANIDBuff = new byte[8];
@@ -764,8 +788,11 @@ namespace WindowsFormsApplication1
                 }
                 else
                 {
-                    // 数字合法                  
-                    for (int numbersIndex = 0; numbersIndex < numbers.Length; numbersIndex++)
+                    // 数字合法
+                    int totalNumbers = numbers.Length;
+                    int progress = 0;
+
+                    for (int numbersIndex = 0; numbersIndex < totalNumbers; numbersIndex++)
                     {
                         for (int i = 0; i < 4; i++)
                         {
@@ -779,16 +806,43 @@ namespace WindowsFormsApplication1
 
                         if (!CanSendData(CanID, CANIDBuff))
                         {
-                            throw new Exception("Error : 10001");
+                            // 发生错误，中断进度条并显示错误信息
+                            MessageBox.Show("Error : 10001");
+                            return;
                         }
+
+                        // 更新进度条
+                        progress = (numbersIndex + 1) * 100 / (totalNumbers + 1);
+                        ConfigProgressBar.Value = progress;
                     }
+
+                    // 处理完毕，重置进度条
+                    // ConfigProgressBar.Value = 0;
+
+                    // 等待烧写成功的握手信号
+                    // .......
+                    WaitSYN(3, 5000);
+                    ConfigProgressBar.Value = 100;
+                    Res = true;
                 }
             }
             else
             {
                 MessageBox.Show("只有Lastest version支持此功能");
             }
+
+            if (initFlag)
+            {
+                CanClose();
+            }
+            if (Res)
+            {
+                ShowMessage("OK");
+            }
+            EnableControl(CANIDConfigButton);
+
         }
+
 
         private void ConfigProgressBar_Click(object sender, EventArgs e)
         {

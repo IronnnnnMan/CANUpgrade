@@ -172,6 +172,7 @@
             this.ConfigProgressBar.Location = new System.Drawing.Point(562, 143);
             this.ConfigProgressBar.Name = "ConfigProgressBar";
             this.ConfigProgressBar.Size = new System.Drawing.Size(285, 44);
+            this.ConfigProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.ConfigProgressBar.TabIndex = 22;
             this.ConfigProgressBar.Click += new System.EventHandler(this.ConfigProgressBar_Click);
             // 
