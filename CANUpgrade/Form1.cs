@@ -792,10 +792,6 @@ namespace WindowsFormsApplication1
             {
                 MessageBox.Show("只有Lastest version支持此功能");
             }
-
-
-
-
         }
 
         private void ConfigProgressBar_Click(object sender, EventArgs e)
