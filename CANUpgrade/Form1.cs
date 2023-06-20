@@ -780,6 +780,7 @@ namespace WindowsFormsApplication1
 
                 SendCanIdConfigMark(CanID);
                 WaitSYN(3, 1000);
+                Thread.Sleep(2000);
 
                 for (int i = 0; i < textBoxes.Length; i++)
                 {
@@ -846,6 +847,7 @@ namespace WindowsFormsApplication1
                         // 更新进度条
                         progress = (numbersIndex + 1) * 100 / (totalNumbers + 1);
                         ConfigProgressBar.Value = progress;
+                        Thread.Sleep(20);
                     }
 
                     // 处理完毕，重置进度条
