@@ -476,7 +476,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        private void Send_UpdateMark(UInt32 CanID)
+        private void SendUpgradeMark(UInt32 CanID)
         {
             byte[] Pkt = new byte[8];
 
@@ -493,6 +493,25 @@ namespace WindowsFormsApplication1
                 throw new Exception("Error : 10001");
             }
         }
+
+        private void SendCanIdConfigMark(UInt32 CanID)
+        {
+            byte[] Pkt = new byte[8];
+
+            Pkt[0] = 0x00;
+            Pkt[1] = 0xCC;
+            Pkt[2] = 0x00;
+            Pkt[3] = 0xCC;
+            Pkt[4] = 0x00;
+            Pkt[5] = 0xCC;
+            Pkt[6] = 0x00;
+            Pkt[7] = 0xCC;
+            if (!CanSendData(CanID, Pkt))
+            {
+                throw new Exception("Error : 10001");
+            }
+        }
+
         private void WaitSYN(int HandshakingType, int TimeOut)
         {
             byte[] tmpBuf = new byte[8];
@@ -504,7 +523,7 @@ namespace WindowsFormsApplication1
                 {
                     if (TimeOut == 0)
                     {
-                        if (HandshakingType == 1)
+                        if ((HandshakingType == 1) || (HandshakingType == 3) || (HandshakingType == 4))
                         {
                             throw new Exception("Error : 10002");
                         }
@@ -538,12 +557,22 @@ namespace WindowsFormsApplication1
                             break;
                         }
                     }
-                    else if (HandshakingType == 3) // 烧写CANID配置之后握手
+                    else if (HandshakingType == 3) // 发送CANID配置握手信号
                     {
                         if (tmpBuf[0] == 0xCC && tmpBuf[1] == 0x00
                             && tmpBuf[2] == 0xCC && tmpBuf[3] == 0x00
                             && tmpBuf[4] == 0xCC && tmpBuf[5] == 0x00
                             && tmpBuf[6] == 0xCC && tmpBuf[7] == 0x00)
+                        {
+                            break;
+                        }
+                    }
+                    else if (HandshakingType == 4) // 烧写CANID配置完成后握手
+                    {
+                        if (tmpBuf[0] == 0xDD && tmpBuf[1] == 0x00
+                            && tmpBuf[2] == 0xDD && tmpBuf[3] == 0x00
+                            && tmpBuf[4] == 0xDD && tmpBuf[5] == 0x00
+                            && tmpBuf[6] == 0xDD && tmpBuf[7] == 0x00)
                         {
                             break;
                         }
@@ -609,7 +638,7 @@ namespace WindowsFormsApplication1
                     throw new Exception("Error : 10004");
                 }
 
-                Send_UpdateMark(CanID);
+                SendUpgradeMark(CanID);
                 CanInitForUpdate();
                 WaitSYN(1, 200);
                 if (LastestVerCheckedFlag == 1)
@@ -749,6 +778,9 @@ namespace WindowsFormsApplication1
                 uint[] numbers = new uint[3];
                 bool isValidInput = true; // 标记是否输入有效
 
+                SendCanIdConfigMark(CanID);
+                WaitSYN(3, 1000);
+
                 for (int i = 0; i < textBoxes.Length; i++)
                 {
                     string inputText = textBoxes[i].Text;
@@ -821,7 +853,7 @@ namespace WindowsFormsApplication1
 
                     // 等待烧写成功的握手信号
                     // .......
-                    WaitSYN(3, 5000);
+                    //WaitSYN(4, 5000);
                     ConfigProgressBar.Value = 100;
                     Res = true;
                 }
@@ -833,7 +865,7 @@ namespace WindowsFormsApplication1
 
             if (initFlag)
             {
-                CanClose();
+                //CanClose();
             }
             if (Res)
             {
