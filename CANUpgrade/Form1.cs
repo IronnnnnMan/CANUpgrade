@@ -583,7 +583,7 @@ namespace WindowsFormsApplication1
                 Send_UpdateMark(CanID);
                 CanInitForUpdate();
                 WaitSYN(100);
-                Thread.Sleep(8000);
+                Thread.Sleep(16000);
                 CanDataClear();
 
                 Offset = (1 + 8 + 2) * 8;
