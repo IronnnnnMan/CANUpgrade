@@ -827,28 +827,54 @@ namespace WindowsFormsApplication1
 
                     for (int numbersIndex = 0; numbersIndex < totalNumbers; numbersIndex++)
                     {
-                        for (int i = 0; i < 4; i++)
+                        for (int CANIDBufTmpIndex = 0; CANIDBufTmpIndex < 2; CANIDBufTmpIndex++)
                         {
-                            CANIDBuff[i] = (byte)((numbers[numbersIndex] >> (8 * (i % 4))) & 0xFF);
-                        }
+                            if (CANIDBufTmpIndex == 0)
+                            {
+                                int startIndex = 0;
 
-                        for (int i = 4; i < 8; i++)
-                        {
-                            CANIDBuff[i] = 0x00;
-                        }
+                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 24) & 0xFF);
+                                CANIDBuff[startIndex + 1] = (byte)((numbers[numbersIndex] >> 16) & 0xFF);
 
-                        if (!CanSendData(CanID, CANIDBuff))
-                        {
-                            // 发生错误，中断进度条并显示错误信息
-                            MessageBox.Show("Error : 10001");
-                            return;
-                        }
+                                for (int i = startIndex + 2; i < startIndex + 8; i++)
+                                {
+                                    CANIDBuff[i] = 0x00;
+                                }
 
+                                if (!CanSendData(CanID, CANIDBuff))
+                                {
+                                    // 发生错误，中断进度条并显示错误信息
+                                    MessageBox.Show("Error : 10001");
+                                    return;
+                                }
+                                Thread.Sleep(20);
+                            }
+                            else if (CANIDBufTmpIndex == 1)
+                            {
+                                int startIndex = 0;
+
+                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 8) & 0xFF);
+                                CANIDBuff[startIndex + 1] = (byte)(numbers[numbersIndex] & 0xFF);
+
+                                for (int i = startIndex + 2; i < startIndex + 8; i++)
+                                {
+                                    CANIDBuff[i] = 0x00;
+                                }
+
+                                if (!CanSendData(CanID, CANIDBuff))
+                                {
+                                    // 发生错误，中断进度条并显示错误信息
+                                    MessageBox.Show("Error : 10001");
+                                    return;
+                                }
+                                Thread.Sleep(20);
+                            }
+                        }
                         // 更新进度条
                         progress = (numbersIndex + 1) * 100 / (totalNumbers + 1);
                         ConfigProgressBar.Value = progress;
-                        Thread.Sleep(20);
                     }
+
 
                     // 处理完毕，重置进度条
                     // ConfigProgressBar.Value = 0;
