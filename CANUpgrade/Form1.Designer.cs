@@ -83,7 +83,7 @@
             this.label1.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.Location = new System.Drawing.Point(47, 37);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(125, 21);
+            this.label1.Size = new System.Drawing.Size(101, 17);
             this.label1.TabIndex = 4;
             this.label1.Text = "CAN Baudrate";
             this.label1.Click += new System.EventHandler(this.label1_Click);
@@ -104,13 +104,13 @@
             "5kbps"});
             this.comboBox1.Location = new System.Drawing.Point(182, 34);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(134, 29);
+            this.comboBox1.Size = new System.Drawing.Size(134, 25);
             this.comboBox1.TabIndex = 10;
             this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 21F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(853, 199);
             this.Controls.Add(this.comboBox1);
@@ -125,7 +125,7 @@
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "CAN Upgrade Service 2.3";
+            this.Text = "CAN Upgrade Service V2.4";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
