@@ -68,7 +68,7 @@
             this.UpgradeServicePanel.Controls.Add(this.UpgradeButton);
             this.UpgradeServicePanel.Controls.Add(this.BrowseButton);
             this.UpgradeServicePanel.Controls.Add(this.UgFileTextBox);
-            this.UpgradeServicePanel.Location = new System.Drawing.Point(9, 403);
+            this.UpgradeServicePanel.Location = new System.Drawing.Point(9, 352);
             this.UpgradeServicePanel.Name = "UpgradeServicePanel";
             this.UpgradeServicePanel.Size = new System.Drawing.Size(879, 198);
             this.UpgradeServicePanel.TabIndex = 13;
@@ -140,9 +140,9 @@
             this.IDConfigPanel.Controls.Add(this.label4);
             this.IDConfigPanel.Controls.Add(this.label3);
             this.IDConfigPanel.Controls.Add(this.label2);
-            this.IDConfigPanel.Location = new System.Drawing.Point(9, 130);
+            this.IDConfigPanel.Location = new System.Drawing.Point(394, 4);
             this.IDConfigPanel.Name = "IDConfigPanel";
-            this.IDConfigPanel.Size = new System.Drawing.Size(879, 267);
+            this.IDConfigPanel.Size = new System.Drawing.Size(494, 342);
             this.IDConfigPanel.TabIndex = 14;
             this.IDConfigPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
             // 
@@ -159,19 +159,19 @@
             // 
             // CANIDConfigButton
             // 
-            this.CANIDConfigButton.Location = new System.Drawing.Point(458, 143);
+            this.CANIDConfigButton.Location = new System.Drawing.Point(43, 263);
             this.CANIDConfigButton.Name = "CANIDConfigButton";
-            this.CANIDConfigButton.Size = new System.Drawing.Size(98, 44);
+            this.CANIDConfigButton.Size = new System.Drawing.Size(124, 32);
             this.CANIDConfigButton.TabIndex = 23;
-            this.CANIDConfigButton.Text = "CONFIG";
+            this.CANIDConfigButton.Text = "Config";
             this.CANIDConfigButton.UseVisualStyleBackColor = true;
             this.CANIDConfigButton.Click += new System.EventHandler(this.CANIDConfigButton_Click);
             // 
             // ConfigProgressBar
             // 
-            this.ConfigProgressBar.Location = new System.Drawing.Point(562, 143);
+            this.ConfigProgressBar.Location = new System.Drawing.Point(173, 263);
             this.ConfigProgressBar.Name = "ConfigProgressBar";
-            this.ConfigProgressBar.Size = new System.Drawing.Size(285, 44);
+            this.ConfigProgressBar.Size = new System.Drawing.Size(233, 32);
             this.ConfigProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.ConfigProgressBar.TabIndex = 22;
             this.ConfigProgressBar.Click += new System.EventHandler(this.ConfigProgressBar_Click);
@@ -271,13 +271,13 @@
             this.SoftwareConfigPanel.Controls.Add(this.label9);
             this.SoftwareConfigPanel.Location = new System.Drawing.Point(9, 4);
             this.SoftwareConfigPanel.Name = "SoftwareConfigPanel";
-            this.SoftwareConfigPanel.Size = new System.Drawing.Size(879, 120);
+            this.SoftwareConfigPanel.Size = new System.Drawing.Size(379, 342);
             this.SoftwareConfigPanel.TabIndex = 15;
             // 
             // OldVersionButton
             // 
             this.OldVersionButton.AutoSize = true;
-            this.OldVersionButton.Location = new System.Drawing.Point(648, 56);
+            this.OldVersionButton.Location = new System.Drawing.Point(65, 94);
             this.OldVersionButton.Name = "OldVersionButton";
             this.OldVersionButton.Size = new System.Drawing.Size(126, 25);
             this.OldVersionButton.TabIndex = 29;
@@ -290,7 +290,7 @@
             // 
             this.LastestVersionButton.AutoSize = true;
             this.LastestVersionButton.Checked = true;
-            this.LastestVersionButton.Location = new System.Drawing.Point(458, 56);
+            this.LastestVersionButton.Location = new System.Drawing.Point(65, 63);
             this.LastestVersionButton.Name = "LastestVersionButton";
             this.LastestVersionButton.Size = new System.Drawing.Size(156, 25);
             this.LastestVersionButton.TabIndex = 28;
@@ -313,7 +313,7 @@
             "20kbps",
             "10kbps",
             "5kbps"});
-            this.BaudrateComboBox.Location = new System.Drawing.Point(203, 57);
+            this.BaudrateComboBox.Location = new System.Drawing.Point(203, 165);
             this.BaudrateComboBox.Name = "BaudrateComboBox";
             this.BaudrateComboBox.Size = new System.Drawing.Size(134, 29);
             this.BaudrateComboBox.TabIndex = 27;
@@ -323,7 +323,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(61, 60);
+            this.label11.Location = new System.Drawing.Point(61, 168);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(123, 21);
             this.label11.TabIndex = 26;
@@ -344,7 +344,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 21F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(900, 613);
+            this.ClientSize = new System.Drawing.Size(900, 558);
             this.Controls.Add(this.SoftwareConfigPanel);
             this.Controls.Add(this.IDConfigPanel);
             this.Controls.Add(this.UpgradeServicePanel);

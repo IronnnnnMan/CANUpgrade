@@ -217,6 +217,9 @@ namespace WindowsFormsApplication1
         /*-----------全局变量声明-------------*/
         UInt16 LastestVerCheckedFlag = 1;
         UInt16 ChangeToOldVersion = 0;
+        uint UpgradeChecksum = 0;
+        uint CANIDChecksum = 0;
+
 
         public Form1()
         {
@@ -515,7 +518,7 @@ namespace WindowsFormsApplication1
         private void WaitSYN(int HandshakingType, int TimeOut)
         {
             byte[] tmpBuf = new byte[8];
-            UInt32 CanID = 0;
+            uint CanID = 0;
 
             do
             {
@@ -580,6 +583,54 @@ namespace WindowsFormsApplication1
                 }
             } while (true);
         }
+
+        private void WaitChecksum(short ChecksumType, uint ChecksumFromPC, short TimeOut)
+        {
+            byte[] tmpBuf = new byte[8];
+            uint CanID = 0;
+            uint ChecksumFromLower = 0;
+
+            do
+            {
+                if (!CanRecvData(ref CanID, ref tmpBuf))
+                {
+                    if (TimeOut == 0)
+                    {
+                        if (ChecksumType == 1)
+                        {
+                            throw new Exception("Error : 20001");
+                        }
+                        else if (ChecksumType == 2)
+                        {
+                            throw new Exception("Error : 20002");
+                        }
+                    }
+                    TimeOut--;
+                    Thread.Sleep(10);
+                }
+                else
+                {
+                    if (ChecksumType == 1) // 
+                    {
+
+                    }
+                    else if (ChecksumType == 2) // 
+                    {
+                        ChecksumFromLower = ((uint)tmpBuf[4] << 24) | ((uint)tmpBuf[5] << 16) | ((uint)tmpBuf[6] << 8) | tmpBuf[7];
+                        if (ChecksumFromLower == ChecksumFromPC)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            throw new Exception("Error : 20004");
+                        }
+
+                    }
+                }
+            } while (true);
+        }
+
         private void CanDataClear()
         {
             VCI_ClearBuffer(4, 0, 0);
@@ -768,6 +819,9 @@ namespace WindowsFormsApplication1
             CanInit();
             initFlag = true;
 
+            // 每次配置ID之前checksum清零
+            CANIDChecksum = 0;
+
             // 只有新版本有此功能
             if (LastestVerCheckedFlag == 1)
             {
@@ -779,6 +833,7 @@ namespace WindowsFormsApplication1
                 bool isValidInput = true; // 标记是否输入有效
 
                 SendCanIdConfigMark(CanID);
+                CanInitForUpdate();
                 WaitSYN(3, 1000);
                 Thread.Sleep(2000);
 
@@ -833,13 +888,15 @@ namespace WindowsFormsApplication1
                             {
                                 int startIndex = 0;
 
-                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 24) & 0xFF);
-                                CANIDBuff[startIndex + 1] = (byte)((numbers[numbersIndex] >> 16) & 0xFF);
+                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 8) & 0xFF);
+                                CANIDBuff[startIndex + 1] = (byte)(numbers[numbersIndex] & 0xFF);
 
                                 for (int i = startIndex + 2; i < startIndex + 8; i++)
                                 {
                                     CANIDBuff[i] = 0x00;
                                 }
+
+                                CANIDChecksum += ((uint)CANIDBuff[0] << 8) | CANIDBuff[1];
 
                                 if (!CanSendData(CanID, CANIDBuff))
                                 {
@@ -853,13 +910,15 @@ namespace WindowsFormsApplication1
                             {
                                 int startIndex = 0;
 
-                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 8) & 0xFF);
-                                CANIDBuff[startIndex + 1] = (byte)(numbers[numbersIndex] & 0xFF);
+                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 24) & 0xFF);
+                                CANIDBuff[startIndex + 1] = (byte)((numbers[numbersIndex] >> 16) & 0xFF);
 
                                 for (int i = startIndex + 2; i < startIndex + 8; i++)
                                 {
                                     CANIDBuff[i] = 0x00;
                                 }
+
+                                CANIDChecksum += ((uint)CANIDBuff[0] << 8) | CANIDBuff[1];
 
                                 if (!CanSendData(CanID, CANIDBuff))
                                 {
@@ -871,18 +930,18 @@ namespace WindowsFormsApplication1
                             }
                         }
                         // 更新进度条
-                        progress = (numbersIndex + 1) * 100 / (totalNumbers + 1);
+                        progress = (numbersIndex + 1) * 100 / (totalNumbers + 2);
                         ConfigProgressBar.Value = progress;
                     }
 
-
-                    // 处理完毕，重置进度条
-                    // ConfigProgressBar.Value = 0;
-
                     // 等待烧写成功的握手信号
-                    // .......
-                    //WaitSYN(4, 5000);
+                    WaitSYN(4, 1000);
+                    ConfigProgressBar.Value = 80;
+
+                    // 等待校验和匹配
+                    WaitChecksum(2, CANIDChecksum, 1000);
                     ConfigProgressBar.Value = 100;
+
                     Res = true;
                 }
             }
@@ -893,7 +952,7 @@ namespace WindowsFormsApplication1
 
             if (initFlag)
             {
-                //CanClose();
+                CanClose();
             }
             if (Res)
             {
