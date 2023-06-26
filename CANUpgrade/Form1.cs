@@ -495,7 +495,7 @@ namespace WindowsFormsApplication1
                 throw new Exception("Error : 10001");
             }
         }
-        private void WaitSYN(int TimeOut)
+        private void WaitSYN(int HandshakingType, int TimeOut)
         {
             byte[] tmpBuf = new byte[8];
             UInt32 CanID = 0;
@@ -506,19 +506,39 @@ namespace WindowsFormsApplication1
                 {
                     if (TimeOut == 0)
                     {
-                        throw new Exception("Error : 10002");
+                        if (HandshakingType == 1)
+                        {
+                            throw new Exception("Error : 10002");
+                        }
+                        else if (HandshakingType == 2)
+                        {
+                            throw new Exception("Error : 10003");
+                        }                       
                     }
                     TimeOut--;
                     Thread.Sleep(10);
                 }
                 else
                 {
-                    if (tmpBuf[0] == 0xAA && tmpBuf[1] == 0x00
-                        && tmpBuf[2] == 0xAA && tmpBuf[3] == 0x00
-                        && tmpBuf[4] == 0xAA && tmpBuf[5] == 0x00
-                        && tmpBuf[6] == 0xAA && tmpBuf[7] == 0x00)
+                    if (HandshakingType == 1) // 第一次握手
                     {
-                        break;
+                        if (tmpBuf[0] == 0xAA && tmpBuf[1] == 0x00
+                            && tmpBuf[2] == 0xAA && tmpBuf[3] == 0x00
+                            && tmpBuf[4] == 0xAA && tmpBuf[5] == 0x00
+                            && tmpBuf[6] == 0xAA && tmpBuf[7] == 0x00)
+                        {
+                            break;
+                        }
+                    }
+                    else if (HandshakingType == 2) // 擦除完FLASH扇区后握手
+                    {
+                        if (tmpBuf[0] == 0xBB && tmpBuf[1] == 0x00
+                            && tmpBuf[2] == 0xBB && tmpBuf[3] == 0x00
+                            && tmpBuf[4] == 0xBB && tmpBuf[5] == 0x00
+                            && tmpBuf[6] == 0xBB && tmpBuf[7] == 0x00)
+                        {
+                            break;
+                        }
                     }
                 }
             } while (true);
@@ -582,8 +602,9 @@ namespace WindowsFormsApplication1
 
                 Send_UpdateMark(CanID);
                 CanInitForUpdate();
-                WaitSYN(100);
-                Thread.Sleep(16000);
+                WaitSYN(1, 200);
+                WaitSYN(2, 5000);
+                Thread.Sleep(100);
                 CanDataClear();
 
                 Offset = (1 + 8 + 2) * 8;
