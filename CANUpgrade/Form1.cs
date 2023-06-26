@@ -532,7 +532,7 @@ namespace WindowsFormsApplication1
                         }
                         else if (HandshakingType == 2)
                         {
-                            throw new Exception("WARNNING : 请尝试用旧版本的上位机和软件进行升级。注意：旧版本的工程无法提示是否烧录成功，需要在烧录后通过测试得知！");
+                            throw new Exception("WARNNING : Please try to upgrade with an old version of the host computer and software. Note: The old version of the project cannot prompt whether the upgrading is successful, it needs to be confirmed through testing after upgrading!");
                         }
                     }
                     TimeOut--;
@@ -832,11 +832,7 @@ namespace WindowsFormsApplication1
                 uint[] numbers = new uint[3];
                 bool isValidInput = true; // 标记是否输入有效
 
-                SendCanIdConfigMark(CanID);
-                CanInitForUpdate();
-                WaitSYN(3, 1000);
-                Thread.Sleep(2000);
-
+                // 检查输入字符是否有效
                 for (int i = 0; i < textBoxes.Length; i++)
                 {
                     string inputText = textBoxes[i].Text;
@@ -844,6 +840,15 @@ namespace WindowsFormsApplication1
                     // 检查输入是否为有效的十六进制数
                     if (uint.TryParse(inputText, System.Globalization.NumberStyles.HexNumber, null, out uint number))
                     {
+                        // 检查文本框是否为空
+                        if (string.IsNullOrEmpty(textBoxes[i].Text))
+                        {
+                            // 文本框为空，标记输入无效
+                            isValidInput = false;
+                            // 清空文本框内容或执行其他操作
+                            textBoxes[i].Text = string.Empty;
+                        }
+
                         // 限制输入范围
                         uint minValue = 0x00000000; // 最小值
                         uint maxValue = 0x1FFFFFFF; // 最大值
@@ -872,10 +877,19 @@ namespace WindowsFormsApplication1
                 if (!isValidInput)
                 {
                     // 提示用户输入合法范围的数字
-                    MessageBox.Show($"请输入有效的十六进制数字，并确保在范围 0x00000000 到 0x1FFFFFFF 内。");
+                    MessageBox.Show($"Please enter a valid hexadecimal number and ensure it is within the range of 0x00000000 to 0x1FFFFFFF.");
+                    CanClose();
+                    EnableControl(CANIDConfigButton);
+                    return;
                 }
                 else
                 {
+                    SendCanIdConfigMark(CanID);
+                    CanInitForUpdate();
+                    WaitSYN(3, 1000);
+                    //WaitSYN(3, 1000);
+                    Thread.Sleep(2000);
+
                     // 数字合法
                     int totalNumbers = numbers.Length;
                     int progress = 0;
@@ -947,7 +961,7 @@ namespace WindowsFormsApplication1
             }
             else
             {
-                MessageBox.Show("只有Lastest version支持此功能");
+                MessageBox.Show("This feature is only supported in the latest version.");
             }
 
             if (initFlag)
