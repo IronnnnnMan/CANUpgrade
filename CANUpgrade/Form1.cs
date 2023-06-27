@@ -814,154 +814,158 @@ namespace WindowsFormsApplication1
             bool initFlag = false;
 
             DisableControl(CANIDConfigButton);
-
-            // 初始化CAN分析仪
-            CanInit();
-            initFlag = true;
-
-            // 每次配置ID之前checksum清零
-            CANIDChecksum = 0;
-
-            // 只有新版本有此功能
-            if (LastestVerCheckedFlag == 1)
+            try
             {
-                UInt32 CanID = gCanID;
-                byte[] CANIDBuff = new byte[8];
-                // 获取几个CANID textBox的内容
-                System.Windows.Forms.TextBox[] textBoxes = new System.Windows.Forms.TextBox[] { Specific2FanText, Global2FanText, FromFanText };
-                uint[] numbers = new uint[3];
-                bool isValidInput = true; // 标记是否输入有效
+                // 初始化CAN分析仪
+                CanInit();
+                initFlag = true;
 
-                // 检查输入字符是否有效
-                for (int i = 0; i < textBoxes.Length; i++)
+                // 每次配置ID之前checksum清零
+                CANIDChecksum = 0;
+
+                // 只有新版本有此功能
+                if (LastestVerCheckedFlag == 1)
                 {
-                    string inputText = textBoxes[i].Text;
+                    UInt32 CanID = gCanID;
+                    byte[] CANIDBuff = new byte[8];
+                    // 获取几个CANID textBox的内容
+                    System.Windows.Forms.TextBox[] textBoxes = new System.Windows.Forms.TextBox[] { Specific2FanText, Global2FanText, FromFanText };
+                    uint[] numbers = new uint[3];
+                    bool isValidInput = true; // 标记是否输入有效
 
-                    // 检查输入是否为有效的十六进制数
-                    if (uint.TryParse(inputText, System.Globalization.NumberStyles.HexNumber, null, out uint number))
+                    // 检查输入字符是否有效
+                    for (int i = 0; i < textBoxes.Length; i++)
                     {
-                        // 检查文本框是否为空
-                        if (string.IsNullOrEmpty(textBoxes[i].Text))
-                        {
-                            // 文本框为空，标记输入无效
-                            isValidInput = false;
-                            // 清空文本框内容或执行其他操作
-                            textBoxes[i].Text = string.Empty;
-                        }
+                        string inputText = textBoxes[i].Text;
 
-                        // 限制输入范围
-                        uint minValue = 0x00000000; // 最小值
-                        uint maxValue = 0x1FFFFFFF; // 最大值
-
-                        if (number >= minValue && number <= maxValue)
+                        // 检查输入是否为有效的十六进制数
+                        if (uint.TryParse(inputText, System.Globalization.NumberStyles.HexNumber, null, out uint number))
                         {
-                            numbers[i] = number;
+                            // 检查文本框是否为空
+                            if (string.IsNullOrEmpty(textBoxes[i].Text))
+                            {
+                                // 文本框为空，标记输入无效
+                                isValidInput = false;
+                                // 清空文本框内容或执行其他操作
+                                textBoxes[i].Text = string.Empty;
+                            }
+
+                            // 限制输入范围
+                            uint minValue = 0x00000000; // 最小值
+                            uint maxValue = 0x1FFFFFFF; // 最大值
+
+                            if (number >= minValue && number <= maxValue)
+                            {
+                                numbers[i] = number;
+                            }
+                            else
+                            {
+                                // 超出范围，标记输入无效
+                                isValidInput = false;
+                                // 清空文本框内容或执行其他操作
+                                textBoxes[i].Text = string.Empty;
+                            }
                         }
                         else
                         {
-                            // 超出范围，标记输入无效
+                            // 输入不是有效的十六进制数，标记输入无效
                             isValidInput = false;
                             // 清空文本框内容或执行其他操作
                             textBoxes[i].Text = string.Empty;
                         }
                     }
+
+                    if (!isValidInput)
+                    {
+                        // 提示用户输入合法范围的数字
+                        MessageBox.Show($"Please enter a valid hexadecimal number and ensure it is within the range of 0x00000000 to 0x1FFFFFFF.");
+                        CanClose();
+                        EnableControl(CANIDConfigButton);
+                        return;
+                    }
                     else
                     {
-                        // 输入不是有效的十六进制数，标记输入无效
-                        isValidInput = false;
-                        // 清空文本框内容或执行其他操作
-                        textBoxes[i].Text = string.Empty;
-                    }
-                }
+                        SendCanIdConfigMark(CanID);
+                        CanInitForUpdate();
+                        WaitSYN(3, 1000);
+                        //WaitSYN(3, 1000);
+                        Thread.Sleep(2000);
 
-                if (!isValidInput)
-                {
-                    // 提示用户输入合法范围的数字
-                    MessageBox.Show($"Please enter a valid hexadecimal number and ensure it is within the range of 0x00000000 to 0x1FFFFFFF.");
-                    CanClose();
-                    EnableControl(CANIDConfigButton);
-                    return;
+                        // 数字合法
+                        int totalNumbers = numbers.Length;
+                        int progress = 0;
+
+                        for (int numbersIndex = 0; numbersIndex < totalNumbers; numbersIndex++)
+                        {
+                            for (int CANIDBufTmpIndex = 0; CANIDBufTmpIndex < 2; CANIDBufTmpIndex++)
+                            {
+                                if (CANIDBufTmpIndex == 0)
+                                {
+                                    int startIndex = 0;
+
+                                    CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 8) & 0xFF);
+                                    CANIDBuff[startIndex + 1] = (byte)(numbers[numbersIndex] & 0xFF);
+
+                                    for (int i = startIndex + 2; i < startIndex + 8; i++)
+                                    {
+                                        CANIDBuff[i] = 0x00;
+                                    }
+
+                                    CANIDChecksum += ((uint)CANIDBuff[0] << 8) | CANIDBuff[1];
+
+                                    if (!CanSendData(CanID, CANIDBuff))
+                                    {
+                                        // 发生错误，中断进度条并显示错误信息
+                                        throw new Exception("Error : 10001");
+                                    }
+                                    Thread.Sleep(20);
+                                }
+                                else if (CANIDBufTmpIndex == 1)
+                                {
+                                    int startIndex = 0;
+
+                                    CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 24) & 0xFF);
+                                    CANIDBuff[startIndex + 1] = (byte)((numbers[numbersIndex] >> 16) & 0xFF);
+
+                                    for (int i = startIndex + 2; i < startIndex + 8; i++)
+                                    {
+                                        CANIDBuff[i] = 0x00;
+                                    }
+
+                                    CANIDChecksum += ((uint)CANIDBuff[0] << 8) | CANIDBuff[1];
+
+                                    if (!CanSendData(CanID, CANIDBuff))
+                                    {
+                                        // 发生错误，中断进度条并显示错误信息
+                                        throw new Exception("Error : 10001");
+                                    }
+                                    Thread.Sleep(20);
+                                }
+                            }
+                            // 更新进度条
+                            progress = (numbersIndex + 1) * 100 / (totalNumbers + 2);
+                            ConfigProgressBar.Value = progress;
+                        }
+
+                        // 等待烧写成功的握手信号
+                        WaitSYN(4, 1000);
+                        ConfigProgressBar.Value = 80;
+
+                        // 等待校验和匹配
+                        WaitChecksum(2, CANIDChecksum, 1000);
+                        ConfigProgressBar.Value = 100;
+
+                        Res = true;
+                    }
                 }
                 else
                 {
-                    SendCanIdConfigMark(CanID);
-                    CanInitForUpdate();
-                    WaitSYN(3, 1000);
-                    //WaitSYN(3, 1000);
-                    Thread.Sleep(2000);
-
-                    // 数字合法
-                    int totalNumbers = numbers.Length;
-                    int progress = 0;
-
-                    for (int numbersIndex = 0; numbersIndex < totalNumbers; numbersIndex++)
-                    {
-                        for (int CANIDBufTmpIndex = 0; CANIDBufTmpIndex < 2; CANIDBufTmpIndex++)
-                        {
-                            if (CANIDBufTmpIndex == 0)
-                            {
-                                int startIndex = 0;
-
-                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 8) & 0xFF);
-                                CANIDBuff[startIndex + 1] = (byte)(numbers[numbersIndex] & 0xFF);
-
-                                for (int i = startIndex + 2; i < startIndex + 8; i++)
-                                {
-                                    CANIDBuff[i] = 0x00;
-                                }
-
-                                CANIDChecksum += ((uint)CANIDBuff[0] << 8) | CANIDBuff[1];
-
-                                if (!CanSendData(CanID, CANIDBuff))
-                                {
-                                    // 发生错误，中断进度条并显示错误信息
-                                    MessageBox.Show("Error : 10001");
-                                    return;
-                                }
-                                Thread.Sleep(20);
-                            }
-                            else if (CANIDBufTmpIndex == 1)
-                            {
-                                int startIndex = 0;
-
-                                CANIDBuff[startIndex] = (byte)((numbers[numbersIndex] >> 24) & 0xFF);
-                                CANIDBuff[startIndex + 1] = (byte)((numbers[numbersIndex] >> 16) & 0xFF);
-
-                                for (int i = startIndex + 2; i < startIndex + 8; i++)
-                                {
-                                    CANIDBuff[i] = 0x00;
-                                }
-
-                                CANIDChecksum += ((uint)CANIDBuff[0] << 8) | CANIDBuff[1];
-
-                                if (!CanSendData(CanID, CANIDBuff))
-                                {
-                                    // 发生错误，中断进度条并显示错误信息
-                                    MessageBox.Show("Error : 10001");
-                                    return;
-                                }
-                                Thread.Sleep(20);
-                            }
-                        }
-                        // 更新进度条
-                        progress = (numbersIndex + 1) * 100 / (totalNumbers + 2);
-                        ConfigProgressBar.Value = progress;
-                    }
-
-                    // 等待烧写成功的握手信号
-                    WaitSYN(4, 1000);
-                    ConfigProgressBar.Value = 80;
-
-                    // 等待校验和匹配
-                    WaitChecksum(2, CANIDChecksum, 1000);
-                    ConfigProgressBar.Value = 100;
-
-                    Res = true;
+                    MessageBox.Show("This feature is only supported in the latest version.");
                 }
             }
-            else
+            catch (Exception Err)
             {
-                MessageBox.Show("This feature is only supported in the latest version.");
+                ShowMessage(Err.Message);
             }
 
             if (initFlag)
