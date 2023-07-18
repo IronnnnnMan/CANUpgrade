@@ -22,11 +22,11 @@ namespace WindowsFormsApplication1
     //1.ZLGCAN系列接口卡信息的数据类型。
     public struct VCI_BOARD_INFO
     {
-        public UInt16 hw_Version;
-        public UInt16 fw_Version;
-        public UInt16 dr_Version;
-        public UInt16 in_Version;
-        public UInt16 irq_Num;
+        public ushort hw_Version;
+        public ushort fw_Version;
+        public ushort dr_Version;
+        public ushort in_Version;
+        public ushort irq_Num;
         public byte can_Num;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 20)]
         public byte[] str_Serial_Num;
@@ -81,9 +81,9 @@ namespace WindowsFormsApplication1
     //5.定义初始化CAN的数据类型
     public struct VCI_INIT_CONFIG
     {
-        public UInt32 AccCode;
-        public UInt32 AccMask;
-        public UInt32 Reserved;
+        public uint AccCode;
+        public uint AccMask;
+        public uint Reserved;
         public byte Filter;   //1接收所有帧。2标准帧滤波，3是扩展帧滤波。
         public byte Timing0;
         public byte Timing1;
@@ -94,11 +94,11 @@ namespace WindowsFormsApplication1
     //6.USB-CAN总线适配器板卡信息的数据类型1，该类型为VCI_FindUsbDevice函数的返回参数。
     public struct VCI_BOARD_INFO1
     {
-        public UInt16 hw_Version;
-        public UInt16 fw_Version;
-        public UInt16 dr_Version;
-        public UInt16 in_Version;
-        public UInt16 irq_Num;
+        public ushort hw_Version;
+        public ushort fw_Version;
+        public ushort dr_Version;
+        public ushort in_Version;
+        public ushort irq_Num;
         public byte can_Num;
         public byte Reserved;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
@@ -114,8 +114,8 @@ namespace WindowsFormsApplication1
     {
         public byte Mode;     //模式，0表示正常模式，1表示只听模式,2自测模式
         public byte Filter;   //1接收所有帧。2标准帧滤波，3是扩展帧滤波。
-        public UInt32 AccCode;//接收滤波验收码
-        public UInt32 AccMask;//接收滤波屏蔽码
+        public uint AccCode;//接收滤波验收码
+        public uint AccMask;//接收滤波屏蔽码
         public byte kBaudRate;//波特率索引号，0-SelfDefine,1-5Kbps(未用),2-18依次为：10kbps,20kbps,40kbps,50kbps,80kbps,100kbps,125kbps,200kbps,250kbps,400kbps,500kbps,666kbps,800kbps,1000kbps,33.33kbps,66.66kbps,83.33kbps
         public byte Timing0;
         public byte Timing1;
@@ -126,7 +126,7 @@ namespace WindowsFormsApplication1
     //8.定义波特率设置参数类型
     public struct VCI_BAUD_TYPE
     {
-        public UInt32 Baud;				//存储波特率实际值
+        public uint Baud;				//存储波特率实际值
         public byte SJW;				//同步跳转宽度，取值1-4
         public byte BRP;				//预分频值，取值1-64
         public byte SAM;				//采样点，取值0=采样一次，1=采样三次
@@ -145,10 +145,28 @@ namespace WindowsFormsApplication1
         public VCI_BAUD_TYPE BaudType;
     }
 
-    /*------------数据结构描述完成---------------------------------*/
+    /*****************************************************
+    *  CAN升级上位机错误代码：
+    *  通讯问题：
+    *  10001：发送中断（失败）
+    *  10002：请求未收到反馈
+    *  10003：未收到CANID配置完成信号
+    *  10004：未收到CAN升级完成之后的checksum信号
+    *  10005：未收到CANID配置完成之后的checksum信号
+    *  
+    *  checksum不正确：
+    *  20001：CAN升级checksum错误
+    *  20002：CANID配置checksum错误
+    *  
+    *  BIN文件错误：
+    *  30001：BIN文件前两个字节不为0x08AA
+    *
+    ******************************************************/
+
+    /*------------数据结构描述完成-------------------------*/
     public partial class Form1 : Form
     {
-        private const UInt32 gCanID = 0x1F1F1F1F;
+        private const uint gCanID = 0x1F1F1F1F;
         private Byte Timing0, Timing1;
         private const string LibName = "ControlCAN.dll";
         /// <summary>
@@ -160,63 +178,63 @@ namespace WindowsFormsApplication1
         /// <returns></returns>
         /*------------兼容ZLG的函数描述---------------------------------*/
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_OpenDevice(UInt32 DeviceType, UInt32 DeviceInd, UInt32 Reserved);
+        static extern uint VCI_OpenDevice(uint DeviceType, uint DeviceInd, uint Reserved);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_CloseDevice(UInt32 DeviceType, UInt32 DeviceInd);
+        static extern uint VCI_CloseDevice(uint DeviceType, uint DeviceInd);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_InitCAN(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, ref VCI_INIT_CONFIG pInitConfig);
+        static extern uint VCI_InitCAN(uint DeviceType, uint DeviceInd, uint CANInd, ref VCI_INIT_CONFIG pInitConfig);
 
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_ReadBoardInfo(UInt32 DeviceType, UInt32 DeviceInd, ref VCI_BOARD_INFO pInfo);
+        static extern uint VCI_ReadBoardInfo(uint DeviceType, uint DeviceInd, ref VCI_BOARD_INFO pInfo);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_ReadErrInfo(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, ref VCI_ERR_INFO pErrInfo);
+        static extern uint VCI_ReadErrInfo(uint DeviceType, uint DeviceInd, uint CANInd, ref VCI_ERR_INFO pErrInfo);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_ReadCANStatus(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, ref VCI_CAN_STATUS pCANStatus);
+        static extern uint VCI_ReadCANStatus(uint DeviceType, uint DeviceInd, uint CANInd, ref VCI_CAN_STATUS pCANStatus);
 
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_GetReference(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, UInt32 RefType, ref byte pData);
+        static extern uint VCI_GetReference(uint DeviceType, uint DeviceInd, uint CANInd, uint RefType, ref byte pData);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_SetReference(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, UInt32 RefType, ref byte pData);
+        static extern uint VCI_SetReference(uint DeviceType, uint DeviceInd, uint CANInd, uint RefType, ref byte pData);
 
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_GetReceiveNum(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd);
+        static extern uint VCI_GetReceiveNum(uint DeviceType, uint DeviceInd, uint CANInd);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_ClearBuffer(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd);
+        static extern uint VCI_ClearBuffer(uint DeviceType, uint DeviceInd, uint CANInd);
 
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_StartCAN(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd);
+        static extern uint VCI_StartCAN(uint DeviceType, uint DeviceInd, uint CANInd);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_ResetCAN(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd);
+        static extern uint VCI_ResetCAN(uint DeviceType, uint DeviceInd, uint CANInd);
 
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_Transmit(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, ref VCI_CAN_OBJ pSend, UInt32 Len);
+        static extern uint VCI_Transmit(uint DeviceType, uint DeviceInd, uint CANInd, ref VCI_CAN_OBJ pSend, uint Len);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_Transmit(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, IntPtr pSend, UInt32 Len);
+        static extern uint VCI_Transmit(uint DeviceType, uint DeviceInd, uint CANInd, IntPtr pSend, uint Len);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_Receive(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, ref VCI_CAN_OBJ pReceive, UInt32 Len, Int32 WaitTime);
+        static extern uint VCI_Receive(uint DeviceType, uint DeviceInd, uint CANInd, ref VCI_CAN_OBJ pReceive, uint Len, Int32 WaitTime);
 
         // [DllImport("controlcan.dll", CharSet = CharSet.Ansi)]
-        //static extern UInt32 VCI_Receive(UInt32 DeviceType, UInt32 DeviceInd, UInt32 CANInd, IntPtr pReceive, UInt32 Len, Int32 WaitTime);
+        //static extern uint VCI_Receive(uint DeviceType, uint DeviceInd, uint CANInd, IntPtr pReceive, uint Len, Int32 WaitTime);
 
         /*------------其他函数描述---------------------------------*/
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_GetReference2(UInt32 DevType, UInt32 DevIndex, UInt32 CANIndex, UInt32 Reserved, ref VCI_REF_STRUCT pRefStruct);
+        static extern uint VCI_GetReference2(uint DevType, uint DevIndex, uint CANIndex, uint Reserved, ref VCI_REF_STRUCT pRefStruct);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_SetReference2(UInt32 DevType, UInt32 DevIndex, UInt32 CANIndex, UInt32 RefType, ref byte pData);
+        static extern uint VCI_SetReference2(uint DevType, uint DevIndex, uint CANIndex, uint RefType, ref byte pData);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_ResumeConfig(UInt32 DevType, UInt32 DevIndex, UInt32 CANIndex);
+        static extern uint VCI_ResumeConfig(uint DevType, uint DevIndex, uint CANIndex);
 
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_ConnectDevice(UInt32 DevType, UInt32 DevIndex);
+        static extern uint VCI_ConnectDevice(uint DevType, uint DevIndex);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_UsbDeviceReset(UInt32 DevType, UInt32 DevIndex, UInt32 Reserved);
+        static extern uint VCI_UsbDeviceReset(uint DevType, uint DevIndex, uint Reserved);
         [DllImport("controlcan.dll")]
-        static extern UInt32 VCI_FindUsbDevice(ref VCI_BOARD_INFO1 pInfo);
+        static extern uint VCI_FindUsbDevice(ref VCI_BOARD_INFO1 pInfo);
         /*------------函数描述结束---------------------------------*/
 
         /*-----------全局变量声明-------------*/
-        UInt16 LastestVerCheckedFlag = 1;
-        UInt16 ChangeToOldVersion = 0;
+        ushort LastestVerCheckedFlag = 1;
+        ushort ChangeToOldVersion = 0;
         uint UpgradeChecksum = 0;
         uint CANIDChecksum = 0;
 
@@ -313,7 +331,7 @@ namespace WindowsFormsApplication1
                 throw new Exception("CAN initial fail");
         }
 
-        unsafe private bool CanSendData(UInt32 CanID, byte[] data)
+        unsafe private bool CanSendData(uint CanID, byte[] data)
         {
             VCI_CAN_OBJ obj = new VCI_CAN_OBJ();
             int Res;
@@ -369,7 +387,7 @@ namespace WindowsFormsApplication1
             Marshal.FreeHGlobal(structPtr);
             return obj;
         }
-        unsafe private bool CanSendData(UInt32 CanID, byte[] data, int Len)
+        unsafe private bool CanSendData(uint CanID, byte[] data, int Len)
         {
 
             int objSize = sizeof(VCI_CAN_OBJ);
@@ -424,7 +442,7 @@ namespace WindowsFormsApplication1
             return Res < BlockSize ? false : true;
             //return true;
         }
-        unsafe private bool SendPacket(UInt32 CanID, byte[] Pkt, int TimeOut)
+        unsafe private bool SendPacket(uint CanID, byte[] Pkt, int TimeOut)
         {
             int Idx = 0;
             byte[] tmpBuf = new byte[8];
@@ -446,7 +464,7 @@ namespace WindowsFormsApplication1
             }
             return true;
         }
-        unsafe private bool CanRecvData(ref UInt32 CanID, ref byte[] Dat)
+        unsafe private bool CanRecvData(ref uint CanID, ref byte[] Dat)
         {
             VCI_CAN_OBJ obj = new VCI_CAN_OBJ();
             int Res;
@@ -479,7 +497,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        private void SendUpgradeMark(UInt32 CanID)
+        private void SendUpgradeMark(uint CanID)
         {
             byte[] Pkt = new byte[8];
 
@@ -497,7 +515,7 @@ namespace WindowsFormsApplication1
             }
         }
 
-        private void SendCanIdConfigMark(UInt32 CanID)
+        private void SendCanIdConfigMark(uint CanID)
         {
             byte[] Pkt = new byte[8];
 
@@ -526,13 +544,18 @@ namespace WindowsFormsApplication1
                 {
                     if (TimeOut == 0)
                     {
-                        if ((HandshakingType == 1) || (HandshakingType == 3) || (HandshakingType == 4))
+                        if ((HandshakingType == 1) || (HandshakingType == 3))
                         {
                             throw new Exception("Error : 10002");
                         }
+                        else if (HandshakingType == 4)
+                        {
+                            throw new Exception("Error : 10003");
+                        }
                         else if (HandshakingType == 2)
                         {
-                            throw new Exception("WARNNING : Please try to upgrade with an old version of the host computer and software. Note: The old version of the project cannot prompt whether the upgrading is successful, it needs to be confirmed through testing after upgrading!");
+                            // Note: The old version of the project cannot prompt whether the upgrading is successful, it needs to be confirmed through testing after upgrading!
+                            throw new Exception("WARNNING : Please try to upgrade with the old version of the upper computer and applications!");
                         }
                     }
                     TimeOut--;
@@ -598,11 +621,11 @@ namespace WindowsFormsApplication1
                     {
                         if (ChecksumType == 1)
                         {
-                            throw new Exception("Error : 20001");
+                            throw new Exception("Error : 10004");
                         }
                         else if (ChecksumType == 2)
                         {
-                            throw new Exception("Error : 20002");
+                            throw new Exception("Error : 10005");
                         }
                     }
                     TimeOut--;
@@ -610,11 +633,20 @@ namespace WindowsFormsApplication1
                 }
                 else
                 {
-                    if (ChecksumType == 1) // 
+                    if (ChecksumType == 1) // 接收CAN升级完成后的checksum
                     {
-
+                        ChecksumFromLower = ((uint)tmpBuf[4] << 24) | ((uint)tmpBuf[5] << 16) | ((uint)tmpBuf[6] << 8) | tmpBuf[7];
+                        if (ChecksumFromLower == ChecksumFromPC)
+                        {
+                            ShowMessage("Checksum is right!");
+                            break;
+                        }
+                        else
+                        {
+                            throw new Exception("Error : 20001");
+                        }
                     }
-                    else if (ChecksumType == 2) // 
+                    else if (ChecksumType == 2) // 接收CANID配置完成后的checksum
                     {
                         ChecksumFromLower = ((uint)tmpBuf[4] << 24) | ((uint)tmpBuf[5] << 16) | ((uint)tmpBuf[6] << 8) | tmpBuf[7];
                         if (ChecksumFromLower == ChecksumFromPC)
@@ -623,7 +655,7 @@ namespace WindowsFormsApplication1
                         }
                         else
                         {
-                            throw new Exception("Error : 20004");
+                            throw new Exception("Error : 20002");
                         }
 
                     }
@@ -635,13 +667,13 @@ namespace WindowsFormsApplication1
         {
             VCI_ClearBuffer(4, 0, 0);
         }
-        private UInt16 BinGetWord(byte[] Buf, int Offset)
+        private ushort BinGetWord(byte[] Buf, int Offset)
         {
             uint a, b;
 
             a = Buf[Offset];
             b = Buf[Offset + 1];
-            return (UInt16)(a | (b << 8));
+            return (ushort)(a | (b << 8));
         }
         private UInt32 BinGetLong(byte[] Buf, int Offset)
         {
@@ -660,6 +692,67 @@ namespace WindowsFormsApplication1
                 return false;
             return true;
         }
+
+        private uint ProcessBinaryFile(string filePath)
+        {
+            uint TotalChecksum = 0;
+
+            try
+            {
+                using (FileStream fs = File.OpenRead(filePath))
+                {
+                    BinaryReader reader = new BinaryReader(fs);
+
+                    // 检查文件前两个字节是否为0x08AA
+                    byte[] markerBytes = reader.ReadBytes(2);
+                    ushort marker = BitConverter.ToUInt16(markerBytes, 0);
+                    if (marker != 0x08AA)
+                    {
+                        return 0;
+                    }
+
+                    // 跳过不需要的部分
+                    reader.BaseStream.Position += (1 + 8 + 2) * 8 - 2;
+
+                    while (reader.BaseStream.Position != reader.BaseStream.Length)
+                    {
+                        byte[] blockSizeBytes = reader.ReadBytes(2);
+                        if (blockSizeBytes.Length < 2) break;
+                        ushort blockSize = BitConverter.ToUInt16(blockSizeBytes, 0);
+
+                        // 如果blockSize为0，结束循环
+                        if (blockSize == 0)
+                            break;
+
+                        reader.BaseStream.Position += 6;  // 跳过6个字节
+
+                        byte[] destAddrBytesPart1 = reader.ReadBytes(2);
+                        reader.BaseStream.Position += 6;  // 跳过6个字节
+                        byte[] destAddrBytesPart2 = reader.ReadBytes(2);
+                        reader.BaseStream.Position += 6;  // 跳过6个字节
+                        uint destAddr = ((uint)BitConverter.ToUInt16(destAddrBytesPart1, 0) << 16) | BitConverter.ToUInt16(destAddrBytesPart2, 0);  // 将两部分拼接成一个32位的整数
+
+                        uint checksum = 0;
+                        for (int i = 0; i < blockSize; i++)
+                        {
+                            byte[] twoBytes = reader.ReadBytes(2);
+                            reader.BaseStream.Position += 6;  // 跳过6个字节
+                            ushort value = BitConverter.ToUInt16(twoBytes, 0); // 将前两个字节转为一个ushort值
+                            checksum += value;
+                        }
+                        if ((destAddr >= 0x3F0000) && (destAddr <= 0x3F4000))
+                            TotalChecksum += checksum;
+                    }
+                }
+            }
+            catch (Exception Err)
+            {
+                ShowMessage(Err.Message);
+            }
+
+            return TotalChecksum;
+        }
+
         private void UpdateProcess(object FilePath)
         {
             const int targetBufSize = 0x80;
@@ -669,38 +762,46 @@ namespace WindowsFormsApplication1
             byte[] TmpBuf;
             bool Res = false;
             bool initFlag = false;
-            UInt32 CanID = gCanID;
-            UInt32 DestAddr;
+            uint CanID = gCanID;
+            uint DestAddr;
             int SendLen;
-            UInt16 BlockSize;
+            ushort BlockSize;
+            uint BinFileChecksum;
+            ushort CancelChecksumDetectFlag = 0;
+
+            BinFileChecksum = 0;
 
             DisableControl(UpgradeButton);
 
             TmpBuf = new byte[targetBufSize * 8];
             try
             {
+
+                // BIN文件校验
+                BinFileChecksum = ProcessBinaryFile(BinPath);
+                if (BinFileChecksum == 0)
+                {
+                    throw new Exception("Error : 30001");
+                }
+
                 CanInit();
                 Len = ReadFile(BinPath, out BinBuffer);                
-                InitializeProgressBar(UpgradeProgressBar, 0, Len);
+                InitializeProgressBar(UpgradeProgressBar, 0, (Len + 50));
                 initFlag = true;
-
-                if (!CheckBinaryFile(BinBuffer))
-                {
-                    throw new Exception("Error : 10004");
-                }
 
                 SendUpgradeMark(CanID);
                 CanInitForUpdate();
                 WaitSYN(1, 200);
                 if (LastestVerCheckedFlag == 1)
                 {
+                    CancelChecksumDetectFlag = 0;
                     WaitSYN(2, 3000);
                     Thread.Sleep(100);
                 }
                 else if (LastestVerCheckedFlag == 0)
                 {
                     // 取消校验和检测
-                    // .............
+                    CancelChecksumDetectFlag = 1;
                     Thread.Sleep(16000);
                 }
                 CanDataClear();
@@ -752,6 +853,11 @@ namespace WindowsFormsApplication1
                         Thread.Sleep(30);
                     }
                 }
+                if (CancelChecksumDetectFlag == 0)
+                {
+                    WaitChecksum(1, BinFileChecksum, 500);
+                    SetProgressBarValue(UpgradeProgressBar, (Offset + 50));
+                }              
                 Res = true;
             }
             catch (Exception Err)
@@ -826,7 +932,7 @@ namespace WindowsFormsApplication1
                 // 只有新版本有此功能
                 if (LastestVerCheckedFlag == 1)
                 {
-                    UInt32 CanID = gCanID;
+                    uint CanID = gCanID;
                     byte[] CANIDBuff = new byte[8];
                     // 获取几个CANID textBox的内容
                     System.Windows.Forms.TextBox[] textBoxes = new System.Windows.Forms.TextBox[] { Specific2FanText, Global2FanText, FromFanText };
