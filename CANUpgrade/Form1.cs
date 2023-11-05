@@ -584,6 +584,80 @@ namespace WindowsFormsApplication1
             } while (true);
         }
 
+        private void WaitRetransmission(short TimeOut)
+        {
+            byte[] tmpBuf = new byte[8];
+            uint CanID = 0;
+            uint SendID = gCanID;
+            short RetransmissonTime = (short)(TimeOut / 2);
+
+            do
+            {
+                if (!CanRecvData(ref CanID, ref tmpBuf))
+                {
+                    if (TimeOut == 0)
+                    {
+                        throw new Exception("Error : 10002");
+                    }
+
+                    if (TimeOut == RetransmissonTime)
+                    {
+                        SendCanIdConfigMark(SendID);
+                    }
+                    TimeOut--;
+                    Thread.Sleep(10);
+                }
+                else
+                {
+                    if (tmpBuf[0] == 0xCC && tmpBuf[1] == 0x00
+                        && tmpBuf[2] == 0xCC && tmpBuf[3] == 0x00
+                        && tmpBuf[4] == 0xCC && tmpBuf[5] == 0x00
+                        && tmpBuf[6] == 0xCC && tmpBuf[7] == 0x00)
+                    {
+                        break;
+                    }
+                }
+            } while (true);
+        }
+
+        private void WaitRetransmission1(short TimeOut)
+        {
+            byte[] tmpBuf = new byte[8];
+            uint CanID = 0;
+            uint SendID = gCanID;
+            short RetransmissonTime = 0;
+
+            do
+            {
+                if (!CanRecvData(ref CanID, ref tmpBuf))
+                {
+                    if (TimeOut == 0)
+                    {
+                        throw new Exception("Error : 10002");
+                    }
+
+                    if (RetransmissonTime >= 500)
+                    {
+                        RetransmissonTime = 0;
+                        SendCanIdConfigMark(SendID);                      
+                    }
+                    TimeOut--;
+                    RetransmissonTime++;
+                    Thread.Sleep(10);
+                }
+                else
+                {
+                    if (tmpBuf[0] == 0xCC && tmpBuf[1] == 0x00
+                        && tmpBuf[2] == 0xCC && tmpBuf[3] == 0x00
+                        && tmpBuf[4] == 0xCC && tmpBuf[5] == 0x00
+                        && tmpBuf[6] == 0xCC && tmpBuf[7] == 0x00)
+                    {
+                        break;
+                    }
+                }
+            } while (true);
+        }
+
         private void WaitChecksum(short ChecksumType, uint ChecksumFromPC, short TimeOut)
         {
             byte[] tmpBuf = new byte[8];
@@ -886,9 +960,8 @@ namespace WindowsFormsApplication1
                     else
                     {
                         SendCanIdConfigMark(CanID);
+                        WaitRetransmission1(1500);
                         CanInitForUpdate();
-                        WaitSYN(3, 1000);
-                        //WaitSYN(3, 1000);
                         Thread.Sleep(2000);
 
                         // 数字合法
